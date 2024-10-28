@@ -1,8 +1,11 @@
-1. fix bug that disables "isJumping" when touching wall
-2. add wall jump
+- COMPLETE 1. fix bug that disables "isJumping" when touching wall 
+- COMPLETE 2. add wall jump
+
+9. make it so that touching wall isn't related to the sprite
+6. add movement animations
+7. add movement effects
+
 3. add buffer for jump (also check if StartCoroutine(doubleJump()) has a simpler solution)
 4. add a little check so that if the bird is too close to the floor, it will not double jump and instead buffer a normal jump
 5. add coyote time
-6. add movement animations
-7. add movement effects
 8. order the vars in the unity UI if possible

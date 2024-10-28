@@ -33,6 +33,11 @@ public class BirdMovementScript : MonoBehaviour
     public float doubleJumpForce = 30;
 
     // wall jump
+    public bool isTouchingWall;
+    public float wallJumpForceX;
+    public float wallJumpForceY;
+    public float timeSinceWallJump;
+    public float wallJumpBufferX; 
 
     #endregion
 
@@ -62,6 +67,7 @@ public class BirdMovementScript : MonoBehaviour
 
         #region jump
         timeSinceJump += Time.deltaTime;
+        timeSinceWallJump += Time.deltaTime; 
         if (isGrounded && Input.GetKeyDown(KeyCode.Space))
         {
             BeginJump();
@@ -74,6 +80,7 @@ public class BirdMovementScript : MonoBehaviour
                 ExertDownForce(); 
             }
 
+            StartCoroutine(WallJump());
             StartCoroutine(DoubleJump());
         }
         #endregion
@@ -104,8 +111,24 @@ public class BirdMovementScript : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision) 
     {
-        isJumping = false;
-        hasDoubleJumped = false;
+        if(collision.gameObject.CompareTag("floor"))
+        {
+            isJumping = false;
+            hasDoubleJumped = false;
+        }
+
+        if(collision.gameObject.CompareTag("wall"))
+        {
+            isTouchingWall = true;
+        } 
+    }
+    
+    private void OnCollisionExit2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("wall"))
+        {
+            isTouchingWall = false; 
+        }
     }
 
     private void UpdateDirection()
@@ -127,6 +150,11 @@ public class BirdMovementScript : MonoBehaviour
 
     private void UpdateSpeed()
     {
+        if (timeSinceWallJump < wallJumpBufferX)
+        {
+            return;
+        }
+
         float targetSpeed = moveInput.x * moveSpeed;
         float speedDiff = targetSpeed - rb.linearVelocity.x;
 
@@ -156,7 +184,7 @@ public class BirdMovementScript : MonoBehaviour
     {
         yield return new WaitForSeconds(0.05f);
 
-        if (Input.GetKeyDown(KeyCode.Space)) // TODO: if too close to floor, don't double jump 
+        if (Input.GetKeyDown(KeyCode.Space) && !hasDoubleJumped && !isTouchingWall) // TODO: if too close to floor, don't double jump 
         {
             Debug.Log("double jump");
 
@@ -166,12 +194,19 @@ public class BirdMovementScript : MonoBehaviour
         }
     }
 
-    /*
-    private void WallJump()
+    private IEnumerator WallJump()
     {
+        yield return new WaitForSeconds(0.05f);
 
+        if (Input.GetKeyDown(KeyCode.Space) && isTouchingWall)
+        {
+            timeSinceWallJump = 0;
+            Debug.Log("wall jump");
+            rb.linearVelocityY = 0; 
+            rb.AddForce(Vector2.up * wallJumpForceY, ForceMode2D.Impulse);
+            rb.AddForce(Vector2.right * wallJumpForceX * -lookingDirection.x, ForceMode2D.Impulse); 
+        }
     }
-    */
     #endregion
 
     private IEnumerator Dash()
