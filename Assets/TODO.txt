@@ -1,9 +1,10 @@
 - COMPLETE 1. fix bug that disables "isJumping" when touching wall 
 - COMPLETE 2. add wall jump
-
-X. make it so that touching wall isn't related to the sprite
+- COMPLETE 3. make it so that touching wall isn't related to the sprite
 - draw ray to left / right,
-- can wall jump if bottom 3/4th of bird is touching the wall, if only top 1/4th, cannot
+
+X. clean up this terrible code
+X. make it so that can wall jump if bottom 3/4th of bird is touching the wall, if only top 1/4th, cannot
 
 X. add movement animations
 X. add movement effects

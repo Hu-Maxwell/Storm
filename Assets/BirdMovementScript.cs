@@ -1,13 +1,19 @@
 using UnityEngine;
 using System.Collections;
+using System;
 
 public class BirdMovementScript : MonoBehaviour
 {
+
     #region vars
     public Rigidbody2D rb;
-    public SpriteRenderer sprite; 
+    public SpriteRenderer sprite;
 
-    public Vector2 lookingDirection = Vector2.right;
+    public Vector2 lookingDirection = new Vector2(1, 0);
+
+    public float rayLenX = 2.48f;
+    public float rayLenY = 3.30f;
+    public LayerMask levelLayer;
 
     #region run
     public float moveSpeed = 5;
@@ -23,10 +29,10 @@ public class BirdMovementScript : MonoBehaviour
     public float timeSinceJump; 
     public float jumpForce = 30;
     public float timeToThreeFourthsJumpHeight = 0.5f; // replace this with an equation
+    public float coyoteTime = 0.1f;
 
     public float jumpDownVel = -10.0f;
     public float groundCheckDistance = 0.1f;
-    int groundLayer; // unused var
 
     // double jump
     public bool hasDoubleJumped = false; 
@@ -46,11 +52,13 @@ public class BirdMovementScript : MonoBehaviour
     public float dashMultiplier = 3;
     public float oldVelX;
     #endregion
+
+
     #endregion
 
     void Start()
     {
-        groundLayer = LayerMask.GetMask("floor"); // unused var
+        levelLayer = LayerMask.GetMask("level"); 
     }
 
     void Update()
@@ -92,12 +100,8 @@ public class BirdMovementScript : MonoBehaviour
         }
         #endregion
 
-        #region isGrounded check
-        isGrounded = Physics2D.Raycast(transform.position, Vector2.down, groundCheckDistance, groundLayer);
-        Debug.DrawRay(transform.position, Vector2.down * groundCheckDistance, Color.red);
-        #endregion
-
-        UpdateDirection(); 
+        UpdateDirection();
+        CheckCollisions(); 
     }
 
     private void FixedUpdate()
@@ -109,25 +113,35 @@ public class BirdMovementScript : MonoBehaviour
         UpdateSpeed();
     }
 
-    private void OnCollisionEnter2D(Collision2D collision) 
+    private void CheckCollisions()
     {
-        if(collision.gameObject.CompareTag("floor"))
+        RaycastHit2D downRay = Physics2D.Raycast(transform.position, Vector2.down, rayLenY, levelLayer);
+        RaycastHit2D leftRay = Physics2D.Raycast(transform.position, Vector2.left, rayLenX, levelLayer);
+        RaycastHit2D rightRay = Physics2D.Raycast(transform.position, Vector2.right, rayLenX, levelLayer);
+
+        Debug.DrawRay(transform.position, Vector2.down * rayLenY);
+        Debug.DrawRay(transform.position, Vector2.left * rayLenX);
+        Debug.DrawRay(transform.position, Vector2.right * rayLenX);
+
+        if(downRay)
         {
-            isJumping = false;
+            isGrounded = true;
+            if(timeSinceJump > coyoteTime)
+            {
+                isJumping = false;
+            }
             hasDoubleJumped = false;
+        } else
+        {
+            isGrounded = false; 
         }
 
-        if(collision.gameObject.CompareTag("wall"))
+        if(leftRay || rightRay)
         {
-            isTouchingWall = true;
-        } 
-    }
-    
-    private void OnCollisionExit2D(Collision2D collision)
-    {
-        if (collision.gameObject.CompareTag("wall"))
+            isTouchingWall = true; 
+        } else
         {
-            isTouchingWall = false; 
+            isTouchingWall = false;
         }
     }
 
@@ -176,15 +190,13 @@ public class BirdMovementScript : MonoBehaviour
     {
         Debug.Log("down force");
         rb.linearVelocityY = jumpDownVel;
-        // old code that exerted a down force instead of setting vel directly
-        // rb.AddForce(Vector2.up * (-jumpForce / 2), ForceMode2D.Impulse);
     }
 
     private IEnumerator DoubleJump()
     {
         yield return new WaitForSeconds(0.05f);
 
-        if (Input.GetKeyDown(KeyCode.Space) && !hasDoubleJumped && !isTouchingWall) // TODO: if too close to floor, don't double jump 
+        if (Input.GetKeyDown(KeyCode.Space) && !hasDoubleJumped) // TODO: if too close to floor, don't double jump 
         {
             Debug.Log("double jump");
 
